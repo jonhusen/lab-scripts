@@ -1,64 +1,99 @@
-# New lab dc with dns & dhcp
+# New lab dc with dns & dhcp options
 
-# User supplied parameters
-$hostname = Read-Host -Prompt "New hostname"
-$IpAddress = Read-Host -Prompt "IP address"
-$prefix = Read-Host -Prompt "Network prefix"
-$gateway = Read-Host -Prompt "Default gateway"
-$DnsAddress = "10.0.100.11"
+# Select and validate AD deployment config
+$ADDeployConfig = Read-Host -Prompt "AD Deployment type
+    1. Add DC to existing domain
+    2. Add new domain to existing forest
+    3. New forest
 
-$newDomain = Read-Host -Prompt "Is this a new domain? Y/N"
+    Select option number above"
+
+while ($ADDeployConfig -ne "1" -and $ADDeployConfig -ne "2" -and $ADDeployConfig -ne "3") {
+    $ADDeployConfig = Read-Host -Prompt "AD Deployment type
+        1. Add DC to existing domain
+        2. Add new domain to existing forest
+        3. New forest
+
+        Select option number above"
+}
 
 # Domain config options
-$domainName = "husen.local"
+$DomainName = "husen.local"
 $DbPath = "C:\Windows\NTDS"
 $LogPath = "C:\Windows\NTDS"
 $SysvolPath = "C:\Windows\SYSVOL"
-$dns = $true
-$dhcp = $true
+$SiteName = "Default-First-Site-Name"
+$InstallDns = $true
+$InstallDhcp = $true
+$NoGlobalCatalog = $false
+$ForestMode = "WinThreshold"
+$DomainMode = "WinThreshold"
 
-
-$ethernet = Get-NetAdapter | Where-Object {$_.Name -like "ethernet*"}
-
-# Configure host
-New-NetIPAddress -IPAddress $IpAddress -InterfaceIndex $ethernet.ifIndex -AddressFamily IPv4 -PrefixLength $prefix -DefaultGateway $gateway
-Set-DnsClientServerAddress -InterfaceIndex $ethernet.ifIndex -ServerAddresses $DnsAddress
-Set-TimeZone -Id "Eastern Standard Time"
-Rename-Computer -NewName $hostname
-
-# Check for updates
-# needs work
-$AutoUpdates = New-Object -ComObject "Microsoft.Update.AutoUpdate"
-$AutoUpdates.DetectNow()
-
-Start-Job { echo 6 a a | sconfig }
-
-Restart-Computer
+$DomainCredentials = Get-Credential -UserName "$DomainName.Split(".")[0]\administrator" -Message "Domain credentials for ($DomainName.Split(".")[0])"
 
 Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
-if ($dns) {
+if ($InstallDns) {
     Install-WindowsFeature DNS -IncludeManagementTools
 }
-if ($dhcp) {
+if ($InstallDhcp) {
     Install-WindowsFeature DHCP -IncludeManagementTools
 }
 
-if ($newDomain -eq "y") {
-    Import-Module ADDSDeployment
-    Install-ADDSForest `
-        -CreateDnsDelegation:$false `
-        -DatabasePath $DbPath `
-        -DomainMode "WinThreshold" `
-        -DomainName $domainName `
-        -DomainNetbiosName $domainName.Split(".")[0] `
-        -ForestMode "WinThreshold" `
-        -InstallDns:$dns `
-        -LogPath $LogPath `
-        -NoRebootOnCompletion:$false `
-        -SysvolPath $SysvolPath `
-        -Force:$true
-}
-else {
-    # Install additional dc in existing domain
+switch ($ADDeployConfig) {
+    1 {
+        # Add DC to existing domain
+        Import-Module ADDSDeployment
+        Install-ADDSDomainController `
+            -NoGlobalCatalog:$NoGlobalCatalog `
+            -CreateDnsDelegation:$false `
+            -Credential $DomainCredentials `
+            -CriticalReplicationOnly:$false `
+            -DatabasePath $DbPath `
+            -DomainName $DomainName `
+            -InstallDns:$InstallDns `
+            -LogPath $LogPath `
+            -NoRebootOnCompletion:$false `
+            -SiteName $SiteName `
+            -SysvolPath $SysvolPath `
+            -Force:$true
+    }
+    2 {
+        # Add child domain to existing forest
+        $ChildDomain = Read-Host -Prompt "Name of new child domain"
+        Import-Module ADDSDeployment
+        Install-ADDSDomain `
+            -NoGlobalCatalog:$NoGlobalCatalog `
+            -CreateDnsDelegation:$true `
+            -Credential $DomainCredentials `
+            -DatabasePath $DbPath `
+            -DomainMode $DomainMode `
+            -DomainType "ChildDomain" `
+            -InstallDns:$InstallDns `
+            -LogPath $LogPath `
+            -NewDomainName $ChildDomain `
+            -NewDomainNetbiosName $ChildDomain.ToUpper() `
+            -ParentDomainName $DomainName.Split(".")[0] `
+            -NoRebootOnCompletion:$false `
+            -SiteName $SiteName `
+            -SysvolPath $SysvolPath `
+            -Force:$true
+    }
+    3 {
+        # Configure new forest
+        Import-Module ADDSDeployment
+        Install-ADDSForest `
+            -CreateDnsDelegation:$false `
+            -DatabasePath $DbPath `
+            -DomainMode $DomainMode `
+            -DomainName $DomainName `
+            -DomainNetbiosName ($DomainName.Split(".")[0]).ToUpper() `
+            -ForestMode $ForestMode `
+            -InstallDns:$InstallDns `
+            -LogPath $LogPath `
+            -NoRebootOnCompletion:$false `
+            -SysvolPath $SysvolPath `
+            -Force:$true
+    }
 
+    Default {}
 }
