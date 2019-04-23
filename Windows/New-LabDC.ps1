@@ -29,19 +29,26 @@ $NoGlobalCatalog = $false
 $ForestMode = "WinThreshold"
 $DomainMode = "WinThreshold"
 
-$DomainCredentials = Get-Credential -UserName "$DomainName.Split(".")[0]\administrator" -Message "Domain credentials for ($DomainName.Split(".")[0])"
+$DomainCredentials = Get-Credential -UserName ("{0}\administrator" -f $DomainName.Split(".")[0]) -Message ("Domain credentials for {0} domain" -f $DomainName.Split(".")[0])
 
+# Install DC roles
+Write-Host -Object "Installing AD DS"
 Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+
+Write-Host -Object "Installing DNS"
 if ($InstallDns) {
     Install-WindowsFeature DNS -IncludeManagementTools
 }
+
+Write-Host -Object "Installing DHCP"
 if ($InstallDhcp) {
     Install-WindowsFeature DHCP -IncludeManagementTools
 }
 
+# Configure DC
 switch ($ADDeployConfig) {
     1 {
-        # Add DC to existing domain
+        Write-Host "Adding DC to existing domain"
         Import-Module ADDSDeployment
         Install-ADDSDomainController `
             -NoGlobalCatalog:$NoGlobalCatalog `
@@ -58,7 +65,7 @@ switch ($ADDeployConfig) {
             -Force:$true
     }
     2 {
-        # Add child domain to existing forest
+        Write-Host "Adding child domain to existing forest"
         $ChildDomain = Read-Host -Prompt "Name of new child domain"
         Import-Module ADDSDeployment
         Install-ADDSDomain `
@@ -79,7 +86,7 @@ switch ($ADDeployConfig) {
             -Force:$true
     }
     3 {
-        # Configure new forest
+        Write-Host "Configuring new forest"
         Import-Module ADDSDeployment
         Install-ADDSForest `
             -CreateDnsDelegation:$false `
