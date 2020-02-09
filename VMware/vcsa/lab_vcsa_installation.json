@@ -15,19 +15,19 @@
             ],
             "thin_disk_mode": true,
             "deployment_option": "tiny",
-            "name": "Embedded-vCSA"
+            "name": "vCSA"
         },
         "network": {
             "ip_family": "ipv4",
             "mode": "static",
-            "ip": "10.0.10.50",
+            "ip": "10.0.100.30",
             "dns_servers": [
                 "10.0.100.10",
-                "10.0.100.12"
+                "10.0.100.11"
             ],
             "prefix": "24",
-            "gateway": "10.0.10.1",
-            "system_name": "Embedded-vCSA.husen.local"
+            "gateway": "10.0.100.1",
+            "system_name": "vCSA.husen.local"
         },
         "os": {
             "password": "",
