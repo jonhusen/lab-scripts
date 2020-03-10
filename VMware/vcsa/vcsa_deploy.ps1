@@ -4,7 +4,7 @@
 .DESCRIPTION
     Uses the json template to deploy the VCSA on an ESXi host.
     Primarily meant for use in home lab but can be modified for production use.
-    Assumes deployment is initiated from a Windows OS.
+    Assumes deployment is initiated from a Windows OS and VCSA iso is mounted.
 .EXAMPLE
     PS C:\> .\vcsa_deploy.ps1 -RepoPath "C:\git"
     Runs template verification
