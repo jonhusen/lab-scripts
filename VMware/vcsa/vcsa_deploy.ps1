@@ -27,7 +27,7 @@
 
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [String]
     $RepoPath,
     [Parameter()]
@@ -54,8 +54,7 @@ $Args = @(
 if ($Install) {
     # Install VCSA
     & $InstallerPath install @Args $TemplatePath
-}
-else {
+} else {
     # Verify template
     & $InstallerPath install @Args --verify-template-only $TemplatePath
     Write-Host "`nTo install, run with -Install:`$true`n"
