@@ -27,7 +27,7 @@
 
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [String]
     $RepoPath,
     [Parameter()]
@@ -35,7 +35,7 @@ param (
     $Install = $false
 )
 
-if (!($RepoPath)) {
+while (!(Test-Path -Path $RepoPath)) {
     $RepoPath = Read-Host -Prompt "Path to git repo folder where lab-scripts repo was cloned"
 }
 $Template = "\lab-scripts\VMware\vcsa\lab_vcsa_installation.json"
@@ -46,17 +46,16 @@ $Installer = "\vcsa-cli-installer\win32\vcsa-deploy.exe"
 $InstallerPath = $OpticalDrive + $Installer
 
 $Args = @(
-    "--no-esx-ssl-verify"
+    "--no-ssl-certificate-verification"
     "--accept-eula"
     "--acknowledge-ceip"
 )
 
 if ($Install) {
     # Install VCSA
-    & $InstallerPath install @Args $TemplatePath
-}
-else {
-    # Verify template
-    & $InstallerPath install @Args --verify-template-only $TemplatePath
+    & $InstallerPath install @Args --log-dir "$env:SystemDrive\temp\vcsa_install" $TemplatePath
+} else {
+    # Perform Prechecks
+    & $InstallerPath install @Args --precheck-only $TemplatePath
     Write-Host "`nTo install, run with -Install:`$true`n"
 }

@@ -1,13 +1,26 @@
 {
     "__version": "2.13.0",
-    "__comments": "Template to deploy a new vCSA with an embedded PSC on an ESXi host.",
+    "__comments": "Template to upgrade a vCSA 6.7 with an embedded PSC to a vCSA 6.8 with an embedded PSC on a vCenter Server instance.",
     "new_vcsa": {
-        "esxi": {
-            "hostname": "10.0.10.11",
-            "username": "root",
+        "vc": {
+            "__comments": [
+                "'datacenter' must end with a datacenter name, and only with a datacenter name. ",
+                "'target' must end with an ESXi hostname, a cluster name, or a resource pool name. ",
+                "The item 'Resources' must precede the resource pool name. ",
+                "All names are case-sensitive. ",
+                "For details and examples, refer to template help, i.e. vcsa-deploy {install|upgrade|migrate} --template-help"
+            ],
+            "hostname": "vCSA.husen.local",
+            "username": "administrator@vsphere.local",
             "password": "",
-            "deployment_network": "VM Network",
-            "datastore": "freenas-nfs"
+            "deployment_network": "DSwitch-VM Network",
+            "datacenter": [
+                "HomeLab"
+            ],
+            "datastore": "freenas-nfs",
+            "target": [
+                "Lab Cluster"
+            ]
         },
         "appliance": {
             "__comments": [
@@ -15,28 +28,49 @@
             ],
             "thin_disk_mode": true,
             "deployment_option": "tiny",
-            "name": "vCSA"
+            "name": "vCSA-70"
         },
-        "network": {
+        "os": {
+            "ssh_enable": false
+        },
+        "temporary_network": {
             "ip_family": "ipv4",
             "mode": "static",
-            "ip": "10.0.100.30",
+            "ip": "10.0.100.31",
+            "prefix": "24",
+            "gateway": "10.0.100.1",
             "dns_servers": [
                 "10.0.100.10",
                 "10.0.100.11"
+            ]
+        },
+        "user_options": {
+            "__comments": [
+                "Select the data that you want to copy from the source vCenter Server.",
+                "'core' = 'Configuration and Inventory',",
+                "'core_events_tasks' = 'Configuration, Inventory, Tasks and Events'",
+                "'all' = 'Configuration Inventory, Tasks, Events and Performance Metrics'"
             ],
-            "prefix": "24",
-            "gateway": "10.0.100.1",
-            "system_name": "vCSA.husen.local"
+            "vcdb_migrateSet": "core"
+        }
+    },
+    "source_vc": {
+        "description": {
+            "__comments": [
+                "This section describes the source appliance which you want to",
+                "upgrade and the ESXi host on which the appliance is running. "
+            ]
         },
-        "os": {
-            "password": "",
-            "ntp_servers": "us.pool.ntp.org",
-            "ssh_enable": false
+        "managing_esxi_or_vc": {
+            "hostname": "10.0.10.11",
+            "username": "root",
+            "password": ""
         },
-        "sso": {
+        "vc_vcsa": {
+            "hostname": "vCSA.husen.local",
+            "username": "administrator@vsphere.local",
             "password": "",
-            "domain_name": "vsphere.local"
+            "root_password": ""
         }
     },
     "ceip": {
