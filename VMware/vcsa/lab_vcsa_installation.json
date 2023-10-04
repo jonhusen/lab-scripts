@@ -3,7 +3,7 @@
     "__comments": "Template to deploy a new vCSA with an embedded PSC on an ESXi host.",
     "new_vcsa": {
         "esxi": {
-            "hostname": "10.0.10.11",
+            "hostname": "10.0.10.12",
             "username": "root",
             "password": "",
             "deployment_network": "VM Network",
