@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    A short one-line action-based description, e.g. 'Tests if a function is valid'
+    Configure an ESXi host once brought into vCenter
 .DESCRIPTION
-    A longer description of the function, its purpose, common use cases, etc.
+    Configures storage and networking on a host with a fresh ESXi installation
 .NOTES
-    Information or caveats about the function e.g. 'This function is not supported in Linux'
+    Assumes some things around networking like /24 everywhere
 .LINK
     Specify a URI to a help page, this will show when Get-Help -Online is used.
 .EXAMPLE
